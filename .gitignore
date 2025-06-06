@@ -1,0 +1,36 @@
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Vercel / deployment
+.vercel
+
+# Build artifacts
+dist/
+build/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Editor-specific
+.vscode/
+.idea/
+*.swp
+
+# Coverage reports
+coverage/
+*.lcov
+
+# Optional: If using pm2 or other runtime logs
+pids/
+*.pid
+*.seed
+*.pid.lock
