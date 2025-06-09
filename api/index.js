@@ -1,21 +1,53 @@
-// api/index.js
-
 const express = require('express');
-const dotenv = require('dotenv');
-const BackendRoutes = require('../routes/routes'); // Note: adjust the path
+const cors = require('cors');
+const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
+const serverless = require('serverless-http');
+require('dotenv').config();
 
-dotenv.config();
+const authRoutes = require('../routes/auth');
+const userRoutes = require('../routes/user');
 
 const app = express();
-app.use(express.json());
 
-// API Routes
-app.use('/api', BackendRoutes);
+// Security middleware
+app.use(helmet());
+app.use(cors({
+    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    credentials: true
+}));
 
-// Health check route
-app.get('/', (req, res) => {
-  res.json({ message: 'Connected to backend' });
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+
+app.get('/api/health', (req, res) => {
+    res.status(200).json({
+        status: 'success',
+        message: 'Server is running',
+        timestamp: new Date().toISOString()
+    });
 });
 
-// Export for Vercel
-module.exports = app;
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(err.status || 500).json({
+        status: 'error',
+        message: err.message || 'Internal Server Error'
+    });
+});
+
+app.use('*', (req, res) => {
+    res.status(404).json({
+        status: 'error',
+        message: 'Route not found'
+    });
+});
+
+// ⬇️ Don't listen, export handler
+module.exports = serverless(app);
