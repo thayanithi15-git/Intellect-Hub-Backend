@@ -4,9 +4,6 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
-const authRoutes = require('../routes/auth');
-const userRoutes = require('../routes/user');
-
 const app = express();
 
 // Middlewares
@@ -18,13 +15,42 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-
-// Health route
+// Health route (test this first)
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'success', message: 'Server running' });
+  res.status(200).json({ 
+    status: 'success', 
+    message: 'Server running',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Lazy load routes to avoid database connection timeouts
+app.use('/api/auth', (req, res, next) => {
+  try {
+    const authRoutes = require('../routes/auth');
+    authRoutes(req, res, next);
+  } catch (error) {
+    console.error('Auth routes error:', error);
+    res.status(500).json({ 
+      status: 'error', 
+      message: 'Auth service temporarily unavailable',
+      error: error.message
+    });
+  }
+});
+
+app.use('/api/users', (req, res, next) => {
+  try {
+    const userRoutes = require('../routes/user');
+    userRoutes(req, res, next);
+  } catch (error) {
+    console.error('User routes error:', error);
+    res.status(500).json({ 
+      status: 'error', 
+      message: 'User service temporarily unavailable',
+      error: error.message
+    });
+  }
 });
 
 // Error handlers
@@ -37,8 +63,14 @@ app.use((err, req, res, next) => {
 });
 
 app.use('*', (req, res) => {
-  res.status(404).json({ status: 'error', message: 'Route not found' });
+  res.status(404).json({ 
+    status: 'error', 
+    message: 'Route not found',
+    path: req.originalUrl
+  });
 });
 
-// Export the app directly for Vercel
-module.exports = app;
+// Export handler function for Vercel
+module.exports = (req, res) => {
+  app(req, res);
+};
