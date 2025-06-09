@@ -1,18 +1,17 @@
 const express = require('express');
+const {
+    register,
+    login,
+    logout,
+    getMe
+} = require('../controllers/authcontroller');
+const { protect } = require('../middleware/auth');
+
 const router = express.Router();
 
-// Test route
-router.get('/test', (req, res) => {
-  res.json({ status: 'success', message: 'Auth routes working' });
-});
-
-// Add your actual auth routes here
-router.post('/login', (req, res) => {
-  res.json({ status: 'success', message: 'Login endpoint' });
-});
-
-router.post('/register', (req, res) => {
-  res.json({ status: 'success', message: 'Register endpoint' });
-});
+router.post('/register', register);
+router.post('/login', login);
+router.get('/logout', logout);
+router.get('/me', protect, getMe);
 
 module.exports = router;
