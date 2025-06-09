@@ -1,20 +1,14 @@
 const express = require('express');
-const {
-    getAllUsers,
-    getUserById,
-    updateUser,
-    deleteUser
-} = require('../controllers/usercontroller');
-const { protect, authorize } = require('../middleware/auth');
-
 const router = express.Router();
 
-// Protect all routes
-router.use(protect);
+// Test route
+router.get('/test', (req, res) => {
+  res.json({ status: 'success', message: 'User routes working' });
+});
 
-router.get('/', authorize('admin'), getAllUsers);
-router.get('/:id', getUserById);
-router.put('/:id', updateUser);
-router.delete('/:id', authorize('admin'), deleteUser);
+// Add your actual user routes here
+router.get('/profile', (req, res) => {
+  res.json({ status: 'success', message: 'Profile endpoint' });
+});
 
 module.exports = router;
