@@ -1,5 +1,4 @@
 const express = require('express');
-const serverless = require('serverless-http');
 const cors = require('cors');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
@@ -41,5 +40,5 @@ app.use('*', (req, res) => {
   res.status(404).json({ status: 'error', message: 'Route not found' });
 });
 
-// Export the serverless wrapper
-module.exports = serverless(app);
+// Export the app directly for Vercel
+module.exports = app;
