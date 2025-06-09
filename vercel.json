@@ -6,8 +6,9 @@
   "routes": [
     { "src": "/(.*)", "dest": "/api/index.js" }
   ],
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "api/index.js": {
+    "api/users/**/*.js": {
       "maxDuration": 30
     }
   }
