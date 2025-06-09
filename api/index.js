@@ -13,7 +13,7 @@ const app = express();
 // Middlewares
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'https://intellect-hub-web.vercel.app/',
+  origin: process.env.CORS_ORIGIN || 'https://intellect-hub-web.vercel.app',
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -31,13 +31,15 @@ app.get('/api/health', (req, res) => {
 // Error handlers
 app.use((err, req, res, next) => {
   console.error('Server Error:', err);
-  res.status(err.status || 500).json({ status: 'error', message: err.message || 'Internal Server Error' });
+  res.status(err.status || 500).json({ 
+    status: 'error', 
+    message: err.message || 'Internal Server Error' 
+  });
 });
 
 app.use('*', (req, res) => {
   res.status(404).json({ status: 'error', message: 'Route not found' });
 });
 
-// ❗️IMPORTANT: Export wrapped function — DO NOT call app.listen()
-// module.exports = serverless(app);
-module.exports = app;
+// Export the serverless wrapper - CRITICAL for Vercel
+module.exports = serverless(app);
