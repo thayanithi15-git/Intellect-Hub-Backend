@@ -13,7 +13,7 @@ const app = express();
 // Middlewares
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'https://your-frontend.vercel.app',
+  origin: process.env.CORS_ORIGIN || 'https://intellect-hub-web.vercel.app/',
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -39,4 +39,5 @@ app.use('*', (req, res) => {
 });
 
 // ❗️IMPORTANT: Export wrapped function — DO NOT call app.listen()
-module.exports = serverless(app);
+// module.exports = serverless(app);
+module.exports = app;
