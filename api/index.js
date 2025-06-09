@@ -1,8 +1,8 @@
 const express = require('express');
+const serverless = require('serverless-http');
 const cors = require('cors');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
-const serverless = require('serverless-http');
 require('dotenv').config();
 
 const authRoutes = require('../routes/auth');
@@ -10,44 +10,33 @@ const userRoutes = require('../routes/user');
 
 const app = express();
 
-// Security middleware
+// Middlewares
 app.use(helmet());
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-    credentials: true
+  origin: process.env.CORS_ORIGIN || 'https://your-frontend.vercel.app',
+  credentials: true
 }));
-
-// Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 
+// Health route
 app.get('/api/health', (req, res) => {
-    res.status(200).json({
-        status: 'success',
-        message: 'Server is running',
-        timestamp: new Date().toISOString()
-    });
+  res.status(200).json({ status: 'success', message: 'Server running' });
 });
 
+// Error handlers
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(err.status || 500).json({
-        status: 'error',
-        message: err.message || 'Internal Server Error'
-    });
+  console.error('Server Error:', err);
+  res.status(err.status || 500).json({ status: 'error', message: err.message || 'Internal Server Error' });
 });
 
 app.use('*', (req, res) => {
-    res.status(404).json({
-        status: 'error',
-        message: 'Route not found'
-    });
+  res.status(404).json({ status: 'error', message: 'Route not found' });
 });
 
-// ⬇️ Don't listen, export handler
+// ❗️IMPORTANT: Export wrapped function — DO NOT call app.listen()
 module.exports = serverless(app);
