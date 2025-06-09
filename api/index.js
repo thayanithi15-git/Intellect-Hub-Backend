@@ -16,75 +16,55 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 
-// Health route - Test this first
+// Health route
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
     status: 'success', 
     message: 'Server running',
-    timestamp: new Date().toISOString(),
-    env: process.env.NODE_ENV || 'development'
+    timestamp: new Date().toISOString()
   });
 });
 
-// Test route to check if basic functionality works
-app.get('/api/test', (req, res) => {
-  res.status(200).json({ 
-    status: 'success', 
-    message: 'Test route working',
-    headers: req.headers,
-    query: req.query
-  });
+// Lazy load routes to avoid database connection issues during cold starts
+app.use('/api/auth', (req, res, next) => {
+  try {
+    const authRoutes = require('../routes/auth');
+    authRoutes(req, res, next);
+  } catch (error) {
+    console.error('Auth routes error:', error);
+    res.status(500).json({ 
+      status: 'error', 
+      message: 'Auth service temporarily unavailable' 
+    });
+  }
 });
 
-// Try to load routes with error handling
-try {
-  console.log('Loading auth routes...');
-  const authRoutes = require('../routes/auth');
-  app.use('/api/auth', authRoutes);
-  console.log('Auth routes loaded successfully');
-} catch (error) {
-  console.error('Failed to load auth routes:', error.message);
-  // Create a fallback route
-  app.use('/api/auth', (req, res) => {
+app.use('/api/users', (req, res, next) => {
+  try {
+    const userRoutes = require('../routes/user');
+    userRoutes(req, res, next);
+  } catch (error) {
+    console.error('User routes error:', error);
     res.status(500).json({ 
       status: 'error', 
-      message: 'Auth routes failed to load: ' + error.message 
+      message: 'User service temporarily unavailable' 
     });
-  });
-}
-
-try {
-  console.log('Loading user routes...');
-  const userRoutes = require('../routes/user');
-  app.use('/api/users', userRoutes);
-  console.log('User routes loaded successfully');
-} catch (error) {
-  console.error('Failed to load user routes:', error.message);
-  // Create a fallback route
-  app.use('/api/users', (req, res) => {
-    res.status(500).json({ 
-      status: 'error', 
-      message: 'User routes failed to load: ' + error.message 
-    });
-  });
-}
+  }
+});
 
 // Error handlers
 app.use((err, req, res, next) => {
   console.error('Server Error:', err);
   res.status(err.status || 500).json({ 
     status: 'error', 
-    message: err.message || 'Internal Server Error',
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    message: err.message || 'Internal Server Error' 
   });
 });
 
 app.use('*', (req, res) => {
   res.status(404).json({ 
     status: 'error', 
-    message: 'Route not found',
-    path: req.originalUrl,
-    method: req.method
+    message: 'Route not found' 
   });
 });
 
