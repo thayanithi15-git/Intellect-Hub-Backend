@@ -19,7 +19,7 @@ app.use(cors({
     const allowedOrigins = [
       'http://localhost:3000',  // React dev server
       'http://localhost:3001',  // Alternative React port
-      'https://intellect-hub-web.vercel.app/login',
+      'https://intellect-hub-web.vercel.app/signin',
       'https://intellect-hub-web.vercel.app', // Production frontend
       // Add your actual frontend URL here
     ];
