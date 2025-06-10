@@ -7,36 +7,10 @@ require('dotenv').config();
 const app = express();
 
 // Middlewares
-app.options('*', cors());
-
-app.use(helmet({
-  crossOriginEmbedderPolicy: false,
-}));
-
+app.use(helmet());
 app.use(cors({
-  origin: (origin, callback) => {
-    // Define allowed origins
-    const allowedOrigins = [
-      'http://localhost:3000',  // React dev server
-      'http://localhost:3001',  // Alternative React port
-      'https://intellect-hub-web.vercel.app/signin',
-      'https://intellect-hub-web.vercel.app', // Production frontend
-      // Add your actual frontend URL here
-    ];
-    
-    // Allow requests with no origin (like mobile apps or Postman)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log('Blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
+  origin: process.env.CORS_ORIGIN || 'https://intellect-hub-web.vercel.app',
+  credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
