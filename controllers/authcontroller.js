@@ -6,6 +6,14 @@ const register = async (req, res) => {
     try {
         const { name, email, password, role } = req.body;
 
+        // Validation
+        if (!name || !email || !password) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Please provide name, email and password'
+            });
+        }
+
         // Check if user already exists
         const existingUser = await UserModel.findByEmail(email);
         if (existingUser) {
@@ -23,7 +31,7 @@ const register = async (req, res) => {
             name,
             email,
             password: hashedPassword,
-            role
+            role: role || 'user'
         });
 
         sendTokenResponse(user, 201, res);
@@ -31,7 +39,8 @@ const register = async (req, res) => {
         console.error('Register error:', error);
         res.status(500).json({
             status: 'error',
-            message: 'Server error during registration'
+            message: 'Server error during registration',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };
@@ -39,6 +48,14 @@ const register = async (req, res) => {
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
+
+        // Validation
+        if (!email || !password) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Please provide email and password'
+            });
+        }
 
         // Find user with password
         const user = await UserModel.findByEmail(email);
@@ -48,14 +65,6 @@ const login = async (req, res) => {
                 message: 'Invalid credentials'
             });
         }
-
-        // Check if user is active
-        // if (!user.is_active) {
-        //     return res.status(401).json({
-        //         status: 'error',
-        //         message: 'Account is deactivated'
-        //     });
-        // }
 
         // Verify password
         const isPasswordValid = await comparePassword(password, user.password);
@@ -71,7 +80,8 @@ const login = async (req, res) => {
         console.error('Login error:', error);
         res.status(500).json({
             status: 'error',
-            message: 'Server error during login'
+            message: 'Server error during login',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };
@@ -79,7 +89,9 @@ const login = async (req, res) => {
 const logout = (req, res) => {
     res.cookie('token', 'none', {
         expires: new Date(Date.now() + 10 * 1000),
-        httpOnly: true
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
     });
 
     res.status(200).json({
@@ -91,9 +103,21 @@ const logout = (req, res) => {
 const getMe = async (req, res) => {
     try {
         const user = await UserModel.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'User not found'
+            });
+        }
+
         res.status(200).json({
             status: 'success',
-            user
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
         });
     } catch (error) {
         console.error('Get me error:', error);
