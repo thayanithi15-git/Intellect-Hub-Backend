@@ -9,9 +9,13 @@ const app = express();
 // Middlewares
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'https://intellect-hub-web.vercel.app',
+  origin: (origin, callback) => {
+    // Allow all origins
+    callback(null, true);
+  },
   credentials: true
 }));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 
