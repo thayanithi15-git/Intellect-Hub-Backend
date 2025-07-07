@@ -14,15 +14,16 @@ const app = express();
 
 app.use(helmet());
 
-const allowedOrigins = process.env.CORS_ORIGIN?.split(',').filter(Boolean) || ['http://localhost:3000'];
+// CORS configuration - allows everything
+const corsOptions = {
+  origin: '*', // Allow all origins
+  credentials: false, // Note: credentials must be false when origin is '*'
+  methods: '*', // Allow all methods
+  allowedHeaders: '*', // Allow all headers
+};
 
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
-
+// Apply CORS middleware to all routes
+app.use(cors(corsOptions));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -39,13 +40,6 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 
-// app.use('*', (req, res) => {
-//   res.status(404).json({
-//     success: false,
-//     message: `Route URL not found`,
-//   });
-// });
-
-app.use(errorHandler  as ErrorRequestHandler);
+app.use(errorHandler as ErrorRequestHandler);
 
 export default app;
