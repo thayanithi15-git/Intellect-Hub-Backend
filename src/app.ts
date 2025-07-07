@@ -14,12 +14,15 @@ const app = express();
 
 app.use(helmet());
 
+const allowedOrigins = process.env.CORS_ORIGIN?.split(',').filter(Boolean) || ['http://localhost:3000'];
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'],
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
