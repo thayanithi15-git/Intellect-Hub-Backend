@@ -1,11 +1,11 @@
 {
   "name": "db",
   "version": "1.0.0",
-  "main": "dist/server.ts",
+  "main": "dist/server.js",
 "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "start": "node dist/server.ts",
+    "start": "node dist/server.js",
     "dev": "nodemon src/server.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
@@ -14,7 +14,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "ISC", 
   "description": "",
   "dependencies": {
     "@prisma/client": "^6.11.1",
