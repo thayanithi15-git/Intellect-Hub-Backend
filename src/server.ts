@@ -17,6 +17,17 @@ const startServer = async () => {
     console.error('Failed to start server:', error);
     process.exit(1);
   }
-};
+}
+
+process.on('SIGINT', async () => {
+  await prisma.$disconnect();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  await prisma.$disconnect();
+  process.exit(0);
+});
+
 
 startServer();
