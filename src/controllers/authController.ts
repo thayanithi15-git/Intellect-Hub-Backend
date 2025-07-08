@@ -5,81 +5,11 @@ import { generateToken, setTokenCookie } from '../utils/jwt';
 import { AuthRequest } from '../types';
 import { comparePassword, hashPassword } from '../utils/hash';
 
-
-// export const register = async (req: Request, res: Response): Promise<void> => {
-//     try {
-//         const { email, password, username } = req.body;
-
-//         // Check if login already exists
-//         const existingUser = await prisma.login.findUnique({ where: { email } });
-
-//         if (existingUser) {
-//             res.status(409).json({
-//                 success: false,
-//                 message: 'User already exists with this email',
-//             });
-//             return;
-//         }
-
-//         // Hash password
-//         const hashedPassword = await hashPassword(password);
-
-//         // Create user and login in a transaction to ensure consistency
-//         const result = await prisma.$transaction(async (tx) => {
-//             // Create user first
-//             const newUser = await tx.login.create({
-//                 data: {
-//                     email,
-//                     username,
-//                 },
-//             });
-
-//             // Create login with userId from above
-//             const loginEntry = await tx.login.create({
-//                 data: {
-//                     userId: newUser.userId, // This links to the user
-//                     email,
-//                     username,
-//                     password: hashedPassword,
-//                 },
-//             });
-
-//             return { user: newUser, login: loginEntry };
-//         });
-
-//         const token = generateToken({
-//             userId: result.login.userId,
-//             email: result.login.email,
-//             role: result.login.role,
-//         });
-
-//         setTokenCookie(res, token);
-
-//         res.status(201).json({
-//             success: true,
-//             message: 'User registered successfully',
-//             user: {
-//                 id: result.login.userId,
-//                 email: result.login.email,
-//                 username: result.login.username,
-//                 role: result.login.role,
-//             },
-//             token,
-//         });
-//     } catch (error) {
-//         console.error('Register error:', error);
-//         res.status(500).json({
-//             success: false,
-//             message: 'Server error during registration',
-//         });
-//     }
-// };
-
 export const login = async (req: Request, res: Response): Promise<void> => {
     try {
         const { email, password } = req.body;
 
-        // Find login credentials
+        // Find login credentials - using lowercase 'login'
         const user = await prisma.login.findUnique({
             where: { email },
         });
@@ -144,9 +74,9 @@ export const logout = (req: Request, res: Response) => {
 
 export const getProfile = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        // Fixed: Use userId instead of user_id (consistent with schema field mapping)
+        // Using lowercase 'login'
         const user = await prisma.login.findUnique({
-            where: { userId: req.user!.userId }, // Fixed field name
+            where: { userId: req.user!.userId },
             select: {
                 userId: true,
                 email: true,
