@@ -3,5 +3,4 @@ dist/
 .env
 .DS_Store
 *.log
-prisma/seed/
-prisma/seed/seeders/*
+prisma/seed/*
