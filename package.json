@@ -7,11 +7,9 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "nodemon src/server.ts",
-    "seed": "ts-node prisma/seed/index.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "ts-node prisma/seed/index.ts",
     "db:studio": "prisma studio"
   },
   "keywords": [],
