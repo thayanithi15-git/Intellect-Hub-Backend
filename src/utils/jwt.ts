@@ -6,7 +6,7 @@ type MsString = `${number}${'s' | 'm' | 'h' | 'd'}`; // e.g., '7d', '60s'
 
 // Define the expected payload shape (customize this as needed)
 interface CustomJwtPayload {
-    id: string;
+    userId?: number;
     email?: string;
     role?: string;
 }

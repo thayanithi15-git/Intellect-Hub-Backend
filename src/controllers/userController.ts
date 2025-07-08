@@ -4,11 +4,11 @@ import { AuthRequest } from '../types';
 
 export const getAllUsers = async (req: AuthRequest, res: Response) => {
     try {
-        const users = await prisma.user.findMany({
+        const users = await prisma.login.findMany({
             select: {
-                id: true,
+                userId: true,
                 email: true,
-                name: true,
+                username: true,
                 role: true,
                 createdAt: true,
             },
@@ -30,14 +30,24 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
 
 export const getUserById = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { id } = req.params;
+        const { user_id } = req.params;
 
-        const user = await prisma.user.findUnique({
-            where: { id },
+        const userId = parseInt(user_id, 10);
+
+        if (isNaN(userId)) {
+            res.status(400).json({
+                success: false,
+                message: 'Invalid user ID',
+            });
+            return;
+        }
+
+        const user = await prisma.login.findUnique({
+            where: { userId },
             select: {
-                id: true,
+                userId: true,
                 email: true,
-                name: true,
+                username: true,
                 role: true,
                 createdAt: true,
             },

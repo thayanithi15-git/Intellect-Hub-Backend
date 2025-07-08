@@ -2,7 +2,7 @@ import { Request } from 'express';
 
 export interface AuthRequest extends Request {
   user?: {
-    id: string;
+    userId: number;
     email: string;
     role: string;
   };
@@ -16,5 +16,5 @@ export interface LoginData {
 export interface RegisterData {
   email: string;
   password: string;
-  name?: string;
+  username: string;
 }

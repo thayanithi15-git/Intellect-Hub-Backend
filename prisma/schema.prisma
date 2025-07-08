@@ -7,19 +7,228 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
+// Authentication and User Management
+model Login {
+  userId    Int      @id @map("user_id")
+  username  String   @unique
   email     String   @unique
   password  String
-  name      String?
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role      String   @default("user") // user, admin
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("login")
+}
+
+model User {
+  userId               Int      @id @map("user_id")
+  username             String   @unique
+  email                String   @unique
+  firstName            String?  @map("first_name")
+  lastName             String?  @map("last_name")
+  designation          String?
+  place                String?
+  skills               String?  // JSON array of skills
+  bio                  String?
+  avatarUrl            String?  @map("avatar_url")
+  totalProblemsSolved  Int      @default(0) @map("total_problems_solved")
+  easyProblemsSolved   Int      @default(0) @map("easy_problems_solved")
+  mediumProblemsSolved Int      @default(0) @map("medium_problems_solved")
+  hardProblemsSolved   Int      @default(0) @map("hard_problems_solved")
+  currentStreak        Int      @default(0) @map("current_streak")
+  longestStreak        Int      @default(0) @map("longest_streak")
+  ranking              Int?
+  points               Int      @default(0)
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  login               Login?
+  coursesCreated      Course[]             @relation("CourseCreator")
+  problemsCreated     Problem[]            @relation("ProblemCreator")
+  courseProgress      UserCourseProgress[]
+  submissions         Submission[]
+  comments            Comment[]
+  likes               Like[]
 
   @@map("users")
 }
 
-enum Role {
-  USER
-  ADMIN
+// Course Management
+model Course {
+  courseId      Int      @id @map("course_id")
+  title         String
+  description   String?
+  instructorName String? @map("instructor_name")
+  courseImageUrl String? @map("course_image_url")
+  difficulty    String   // Beginner, Intermediate, Advanced
+  durationHours Int?     @map("duration_hours")
+  likesCount    Int      @default(0) @map("likes_count")
+  commentsCount Int      @default(0) @map("comments_count")
+  enrolledCount Int      @default(0) @map("enrolled_count")
+  isPublished   Boolean  @default(false) @map("is_published")
+  createdBy     Int      @map("created_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  creator        User                 @relation("CourseCreator", fields: [createdBy], references: [userId])
+  levels         CourseLevel[]
+  userProgress   UserCourseProgress[]
+  comments       Comment[]
+  likes          Like[]
+
+  @@map("courses")
+}
+
+model CourseLevel {
+  levelId          Int      @id @map("level_id")
+  courseId         Int      @map("course_id")
+  levelNumber      Int      @map("level_number")
+  levelTitle       String   @map("level_title")
+  levelDescription String?  @map("level_description")
+  youtubeLink      String?  @map("youtube_link")
+  materialLink     String?  @map("material_link") // PDF, docs link
+  prerequisites    String?
+  learningOutcomes String?  @map("learning_outcomes")
+  levelOrder       Int      @map("level_order")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  // Relations
+  course       Course               @relation(fields: [courseId], references: [courseId], onDelete: Cascade)
+  userProgress UserCourseProgress[]
+
+  @@map("course_levels")
+}
+
+// User Course Progress
+model UserCourseProgress {
+  progressId  Int       @id @map("progress_id")
+  userId      Int       @map("user_id")
+  courseId    Int       @map("course_id")
+  levelId     Int       @map("level_id")
+  isCompleted Boolean   @default(false) @map("is_completed")
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  user   User        @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  course Course      @relation(fields: [courseId], references: [courseId], onDelete: Cascade)
+  level  CourseLevel @relation(fields: [levelId], references: [levelId], onDelete: Cascade)
+
+  @@map("user_course_progress")
+}
+
+// Problems Management
+model Problem {
+  problemId       Int      @id @map("problem_id")
+  title           String
+  description     String?
+  difficulty      String   // Easy, Medium, Hard
+  problemType     String   @map("problem_type") // Algorithm, Data Structure, etc.
+  tags            String?  // JSON array of tags
+  sampleInput     String?  @map("sample_input")
+  sampleOutput    String?  @map("sample_output")
+  constraints     String?
+  hints           String?
+  timeLimit       Int?     @map("time_limit") // in seconds
+  memoryLimit     Int?     @map("memory_limit") // in MB
+  likesCount      Int      @default(0) @map("likes_count")
+  commentsCount   Int      @default(0) @map("comments_count")
+  submissionsCount Int     @default(0) @map("submissions_count")
+  acceptedCount   Int      @default(0) @map("accepted_count")
+  acceptanceRate  Float    @default(0.0) @map("acceptance_rate")
+  isPublished     Boolean  @default(false) @map("is_published")
+  createdBy       Int      @map("created_by")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  creator     User         @relation("ProblemCreator", fields: [createdBy], references: [userId])
+  testCases   TestCase[]
+  submissions Submission[]
+  comments    Comment[]
+  likes       Like[]
+
+  @@map("problems")
+}
+
+// Test Cases for Problems
+model TestCase {
+  testCaseId     Int      @id @map("test_case_id")
+  problemId      Int      @map("problem_id")
+  inputData      String   @map("input_data")
+  expectedOutput String   @map("expected_output")
+  testCaseOrder  Int      @map("test_case_order") // 1-6 test cases
+  isSample       Boolean  @default(false) @map("is_sample")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // Relations
+  problem Problem @relation(fields: [problemId], references: [problemId], onDelete: Cascade)
+
+  @@map("test_cases")
+}
+
+// Problem Submissions
+model Submission {
+  submissionId     Int      @id @map("submission_id")
+  userId           Int      @map("user_id")
+  problemId        Int      @map("problem_id")
+  language         String   // Python, JavaScript, Java, C++
+  sourceCode       String   @map("source_code")
+  status           String   // Accepted, Wrong Answer, Error, Time Limit Exceeded
+  testCasesPassed  Int      @map("test_cases_passed")
+  totalTestCases   Int      @map("total_test_cases")
+  executionTime    Int?     @map("execution_time") // in milliseconds
+  memoryUsed       Int?     @map("memory_used") // in KB
+  pointsEarned     Int      @default(0) @map("points_earned")
+  submittedAt      DateTime @default(now()) @map("submitted_at")
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [problemId], onDelete: Cascade)
+
+  @@map("submissions")
+}
+
+// Comments System
+model Comment {
+  commentId       Int      @id @map("comment_id")
+  userId          Int      @map("user_id")
+  courseId        Int?     @map("course_id") // null if problem comment
+  problemId       Int?     @map("problem_id") // null if course comment
+  commentText     String   @map("comment_text")
+  parentCommentId Int?     @map("parent_comment_id") // for nested comments
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  course        Course?   @relation(fields: [courseId], references: [courseId], onDelete: Cascade)
+  problem       Problem?  @relation(fields: [problemId], references: [problemId], onDelete: Cascade)
+  parentComment Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [commentId])
+  replies       Comment[] @relation("CommentReplies")
+
+  @@map("comments")
+}
+
+// Likes System
+model Like {
+  likeId    Int      @id @map("like_id")
+  userId    Int      @map("user_id")
+  courseId  Int?     @map("course_id") // null if problem like
+  problemId Int?     @map("problem_id") // null if course like
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user    User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  course  Course?  @relation(fields: [courseId], references: [courseId], onDelete: Cascade)
+  problem Problem? @relation(fields: [problemId], references: [problemId], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@unique([userId, problemId])
+  @@map("likes")
 }

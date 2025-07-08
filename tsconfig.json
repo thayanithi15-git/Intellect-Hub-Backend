@@ -101,8 +101,22 @@
     /* Completeness */
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true,
-    "rootDir": "src",
-    "outDir": "dist", /* Skip type checking all .d.ts files. */
+    "resolveJsonModule": true,
+    "lib": [
+      "ES2018"
+    ],
+    "outDir": "./dist",
+    "rootDir": "./",
+    "types": [
+      "node"
+    ],
   },
-  "include": ["src"]
+  "include": [
+    "prisma/**/*",
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }
