@@ -18,29 +18,32 @@ async function main() {
   try {
     // Clear existing data in correct order (respecting foreign key constraints)
     console.log('🧹 Clearing existing data...');
-    await prisma.like.deleteMany();
-    await prisma.comment.deleteMany();
-    await prisma.submission.deleteMany();
-    await prisma.testCase.deleteMany();
-    await prisma.userCourseProgress.deleteMany();
-    await prisma.problem.deleteMany();
-    await prisma.courseLevel.deleteMany();
-    await prisma.course.deleteMany();
-    await prisma.login.deleteMany();
-    await prisma.user.deleteMany();
+    
+    // Use the correct model names (camelCase from your schema)
+    await prisma.like.deleteMany({});
+    await prisma.comment.deleteMany({});
+    await prisma.submission.deleteMany({});
+    await prisma.testCase.deleteMany({});
+    await prisma.userCourseProgress.deleteMany({});
+    await prisma.problem.deleteMany({});
+    await prisma.courseLevel.deleteMany({});
+    await prisma.course.deleteMany({});
+    await prisma.login.deleteMany({});
+    await prisma.user.deleteMany({});
 
-    // Reset sequences - using correct sequence names
+    // Reset sequences - using correct sequence names from your schema
     console.log('🔄 Resetting sequences...');
     const sequences = [
-      'users_user_id_seq',           // User table auto-increment
-      'courses_course_id_seq',       // Course table auto-increment
-      'course_levels_level_id_seq',  // CourseLevel table auto-increment
-      'problems_problem_id_seq',     // Problem table auto-increment
-      'test_cases_test_case_id_seq', // TestCase table auto-increment
-      'user_course_progress_progress_id_seq', // UserCourseProgress table auto-increment
-      'submissions_submission_id_seq', // Submission table auto-increment
-      'comments_comment_id_seq',     // Comment table auto-increment
-      'likes_like_id_seq'            // Like table auto-increment
+      'users_user_id_seq',
+      'login_user_id_seq',
+      'courses_course_id_seq',
+      'course_levels_level_id_seq',
+      'problems_problem_id_seq',
+      'test_cases_test_case_id_seq',
+      'user_course_progress_progress_id_seq',
+      'submissions_submission_id_seq',
+      'comments_comment_id_seq',
+      'likes_like_id_seq'
     ];
 
     for (const sequence of sequences) {
@@ -48,69 +51,89 @@ async function main() {
         await prisma.$executeRaw`ALTER SEQUENCE ${Prisma.raw(`"${sequence}"`)} RESTART WITH 1`;
         console.log(`✅ Reset sequence: ${sequence}`);
       } catch (error) {
-        console.log(`⚠️  Could not reset sequence ${sequence}, it may not exist:`);
+        console.log(`⚠️  Could not reset sequence ${sequence}, it may not exist`);
       }
     }
 
     // Seed users first
     console.log('👤 Seeding users...');
-    await prisma.user.createMany({
-      data: usersData
-    });
+    for (const userData of usersData) {
+      await prisma.user.create({
+        data: userData
+      });
+    }
 
     // Seed login data
     console.log('🔐 Seeding login data...');
-    await prisma.login.createMany({
-      data: loginData,
-    });
+    for (const loginEntry of loginData) {
+      await prisma.login.create({
+        data: loginEntry
+      });
+    }
 
     // Seed courses
     console.log('📚 Seeding courses...');
-    await prisma.course.createMany({
-      data: coursesData,
-    });
+    for (const courseData of coursesData) {
+      await prisma.course.create({
+        data: courseData
+      });
+    }
 
     // Seed course levels
     console.log('📖 Seeding course levels...');
-    await prisma.courseLevel.createMany({
-      data: courseLevelsData,
-    });
+    for (const levelData of courseLevelsData) {
+      await prisma.courseLevel.create({
+        data: levelData
+      });
+    }
 
     // Seed problems
     console.log('🧩 Seeding problems...');
-    await prisma.problem.createMany({
-      data: problemsData,
-    });
+    for (const problemData of problemsData) {
+      await prisma.problem.create({
+        data: problemData
+      });
+    }
 
     // Seed test cases
     console.log('🧪 Seeding test cases...');
-    await prisma.testCase.createMany({
-      data: testCasesData,
-    });
+    for (const testCaseData of testCasesData) {
+      await prisma.testCase.create({
+        data: testCaseData
+      });
+    }
 
     // Seed user course progress
     console.log('📊 Seeding user course progress...');
-    await prisma.userCourseProgress.createMany({
-      data: userCourseProgressData,
-    });
+    for (const progressData of userCourseProgressData) {
+      await prisma.userCourseProgress.create({
+        data: progressData
+      });
+    }
 
     // Seed submissions
     console.log('💻 Seeding submissions...');
-    await prisma.submission.createMany({
-      data: submissionsData,
-    });
+    for (const submissionData of submissionsData) {
+      await prisma.submission.create({
+        data: submissionData
+      });
+    }
 
     // Seed comments
     console.log('💬 Seeding comments...');
-    await prisma.comment.createMany({
-      data: commentsData,
-    });
+    for (const commentData of commentsData) {
+      await prisma.comment.create({
+        data: commentData
+      });
+    }
 
     // Seed likes
     console.log('👍 Seeding likes...');
-    await prisma.like.createMany({
-      data: likesData,
-    });
+    for (const likeData of likesData) {
+      await prisma.like.create({
+        data: likeData
+      });
+    }
 
     console.log('✅ Database seeding completed successfully!');
   } catch (error) {
