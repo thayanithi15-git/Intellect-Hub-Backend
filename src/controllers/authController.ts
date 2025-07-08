@@ -5,71 +5,82 @@ import { generateToken, setTokenCookie } from '../utils/jwt';
 import { AuthRequest } from '../types';
 import { comparePassword, hashPassword } from '../utils/hash';
 
-export const register = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { email, password, name } = req.body;
 
-        // Check if user exists
-        const existingUser = await prisma.user.findUnique({
-            where: { email },
-        });
+// export const register = async (req: Request, res: Response): Promise<void> => {
+//     try {
+//         const { email, password, username } = req.body;
 
-        if (existingUser) {
-            res.status(409).json({
-                success: false,
-                message: 'User already exists with this email',
-            });
-            return;
-        }
+//         // Check if login already exists
+//         const existingUser = await prisma.login.findUnique({ where: { email } });
 
-        // Hash password
-        const hashedPassword = await hashPassword(password);
+//         if (existingUser) {
+//             res.status(409).json({
+//                 success: false,
+//                 message: 'User already exists with this email',
+//             });
+//             return;
+//         }
 
-        // Create user
-        const user = await prisma.user.create({
-            data: {
-                email,
-                password: hashedPassword,
-                name,
-            },
-        });
+//         // Hash password
+//         const hashedPassword = await hashPassword(password);
 
-        // Generate token
-        const token = generateToken({
-            id: user.id,
-            email: user.email,
-            role: user.role,
-        });
+//         // Create user and login in a transaction to ensure consistency
+//         const result = await prisma.$transaction(async (tx) => {
+//             // Create user first
+//             const newUser = await tx.login.create({
+//                 data: {
+//                     email,
+//                     username,
+//                 },
+//             });
 
-        // Set cookie
-        setTokenCookie(res, token);
+//             // Create login with userId from above
+//             const loginEntry = await tx.login.create({
+//                 data: {
+//                     userId: newUser.userId, // This links to the user
+//                     email,
+//                     username,
+//                     password: hashedPassword,
+//                 },
+//             });
 
-        res.status(201).json({
-            success: true,
-            message: 'User registered successfully',
-            user: {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                role: user.role,
-            },
-            token,
-        });
-    } catch (error) {
-        console.error('Register error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Server error during registration',
-        });
-    }
-};
+//             return { user: newUser, login: loginEntry };
+//         });
+
+//         const token = generateToken({
+//             userId: result.login.userId,
+//             email: result.login.email,
+//             role: result.login.role,
+//         });
+
+//         setTokenCookie(res, token);
+
+//         res.status(201).json({
+//             success: true,
+//             message: 'User registered successfully',
+//             user: {
+//                 id: result.login.userId,
+//                 email: result.login.email,
+//                 username: result.login.username,
+//                 role: result.login.role,
+//             },
+//             token,
+//         });
+//     } catch (error) {
+//         console.error('Register error:', error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Server error during registration',
+//         });
+//     }
+// };
 
 export const login = async (req: Request, res: Response): Promise<void> => {
     try {
         const { email, password } = req.body;
 
-        // Find user
-        const user = await prisma.user.findUnique({
+        // Find login credentials
+        const user = await prisma.login.findUnique({
             where: { email },
         });
 
@@ -81,11 +92,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        // Check password
+        // Validate password
         const isPasswordValid = await comparePassword(password, user.password);
-        console.log("password: ",password)
-
-        console.log("user.password: ",user.password)
         if (!isPasswordValid) {
             res.status(401).json({
                 success: false,
@@ -94,23 +102,21 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        // Generate token
         const token = generateToken({
-            id: user.id,
+            userId: user.userId,
             email: user.email,
             role: user.role,
         });
 
-        // Set cookie
         setTokenCookie(res, token);
 
         res.status(200).json({
             success: true,
             message: 'Login successful',
             user: {
-                id: user.id,
+                id: user.userId,
                 email: user.email,
-                name: user.name,
+                username: user.username,
                 role: user.role,
             },
             token,
@@ -138,12 +144,13 @@ export const logout = (req: Request, res: Response) => {
 
 export const getProfile = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const user = await prisma.user.findUnique({
-            where: { id: req.user!.id },
+        // Fixed: Use userId instead of user_id (consistent with schema field mapping)
+        const user = await prisma.login.findUnique({
+            where: { userId: req.user!.userId }, // Fixed field name
             select: {
-                id: true,
+                userId: true,
                 email: true,
-                name: true,
+                username: true,
                 role: true,
                 createdAt: true,
             },
