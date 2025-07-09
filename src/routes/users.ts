@@ -4,7 +4,6 @@ import { protect, authorize } from '../middleware/auth';
 
 const router = express.Router();
 
-// Ensure parameter routes are properly formatted
 router.get('/', protect, authorize('ADMIN'), getAllUsers);
 router.get('/:id', protect, getUserById);
 router.get('/', (req, res) => {

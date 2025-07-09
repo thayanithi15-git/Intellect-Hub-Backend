@@ -1,16 +1,15 @@
 import express from 'express';
-import { login, logout, getProfile } from '../controllers/authController';
+import { login, getProfile, register, updateProfile } from '../controllers/authController';
 import { protect } from '../middleware/auth';
-import { validateRegister, validateLogin } from '../middleware/validation';
 
 const router = express.Router();
 
-// Make sure all routes are properly defined
-// router.post('/register', validateRegister, register);
-router.post('/login', validateLogin, login);
+// Public routes
+router.post('/register', register);
+router.post('/login', login);
 
-
-router.post('/logout', logout);
+// Protected routes (require authentication)
 router.get('/profile', protect, getProfile);
+router.put('/profile', protect, updateProfile);
 
 export default router;

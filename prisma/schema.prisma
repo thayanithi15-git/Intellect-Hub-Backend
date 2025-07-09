@@ -9,7 +9,8 @@ datasource db {
 
 // Authentication and User Management
 model Login {
-  userId    Int      @id @map("user_id")
+  id        Int      @id @default(autoincrement()) @map("id")
+  userId    Int      @unique @map("user_id")
   username  String   @unique
   email     String   @unique
   password  String
